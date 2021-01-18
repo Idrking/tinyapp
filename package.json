@@ -1,0 +1,26 @@
+{
+  "name": "tinyapp",
+  "version": "1.0.0",
+  "description": "URL shortener student project for Lighthouse Labs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Idrking/tinyapp.git"
+  },
+  "keywords": [
+    "student",
+    "learning",
+    "lhl",
+    "url",
+    "shortener"
+  ],
+  "author": "Isaac King",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Idrking/tinyapp/issues"
+  },
+  "homepage": "https://github.com/Idrking/tinyapp#readme"
+}
