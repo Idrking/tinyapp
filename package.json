@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/Idrking/tinyapp/issues"
   },
-  "homepage": "https://github.com/Idrking/tinyapp#readme"
+  "homepage": "https://github.com/Idrking/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
