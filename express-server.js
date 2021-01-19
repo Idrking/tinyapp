@@ -7,7 +7,8 @@ const PORT = 8080;
 
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 100000000).toString(32);
-}
+};
+
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
@@ -55,11 +56,15 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
-
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
-})
+});
+
+app.post('/urls/:id', (req, res) => {
+  urlDatabase[req.params.id] = req.body.newURL;
+  res.redirect('back');
+});
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
