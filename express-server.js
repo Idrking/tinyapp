@@ -67,6 +67,11 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars);
 });
 
+app.get('/login', (req, res) => {
+  const templateVars = { userInfo : users[req.cookies.user_id]};
+  res.render('login', templateVars);
+})
+
 
 // POST requests
 

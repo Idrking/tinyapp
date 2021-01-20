@@ -16,11 +16,8 @@
           <button name='logout' class='btn btn-outline-light' type='submit'>LOGOUT</button>
         </form>
         <% } else { %>
-        <form action="/login" method="POST" class='nav-item form-inline ml-auto'>
-          <label for="username" class='sr-only'>Username:</label>
-          <input name='username' type="text" class='form-control nav-item' placeholder="USERNAME">
-          <button class='btn btn-outline-light' type='submit'>LOGIN</button>
-        </form>
+          <a class='nav-item nav-link' href="/login">Login</a>
+          <a class='nav-item nav-link' href="/register">Register</a>
         <% } %>
       </div>
     </div>
