@@ -11,9 +11,9 @@
       </div>
       <div class='navbar-nav ml-auto'>
         <% if (username) { %>
-        <p>Logged In As: <%= username %></p>
         <form action='/logout' method="POST" class='nav-item form-inline ml-auto'>
-          <button class='btn btn-outline-light' type='submit'>LOGOUT</button>
+          <label for="logout" class="nav-text text-muted" style="margin-right: 20px !important">Logged In As: <%= username %></label>
+          <button name='logout' class='btn btn-outline-light' type='submit'>LOGOUT</button>
         </form>
         <% } else { %>
         <form action="/login" method="POST" class='nav-item form-inline ml-auto'>
