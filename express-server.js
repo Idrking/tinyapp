@@ -35,39 +35,42 @@ app.get('/', (req, res) => {
   res.send("Hello!");
 });
 
+// Route for users utilizing the shortened url to link to the intended page
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
+// Route to display list of all currently active shortened URLs
 app.get('/urls', (req, res) => {
   const templateVars = {userInfo : users[req.cookies.user_id], urls: urlDatabase};
   res.render('urls_index', templateVars);
 });
 
+// Serves a page to a user that allows them to create a new URL
 app.get('/urls/new', (req, res) => {
   const templateVars = {userInfo : users[req.cookies.user_id]};
   res.render('urls_new', templateVars);
 });
 
+// Displays information specific to the :shortURL provided, including ability to edit it
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {userInfo: users[req.cookies.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render('urls_show', templateVars);
 });
 
+// returns the active shortened URLs as a JSON object
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>');
-});
-
+// Serves a registration page to user
 app.get('/register', (req, res) => {
   const templateVars = { userInfo : users[req.cookies.user_id]};
   res.render('register', templateVars);
 });
 
+// Serves the login page to a user
 app.get('/login', (req, res) => {
   const templateVars = { userInfo : users[req.cookies.user_id]};
   res.render('login', templateVars);
@@ -76,22 +79,31 @@ app.get('/login', (req, res) => {
 
 // POST requests
 
+// Generates a new shortened URL for a given longURL, assigns it an ID and saves it in the mock database object
+// Then redirects user to the informational page about their new URL
 app.post('/urls', (req, res) => {
   let id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
 });
 
+// Removes a given :shortURL from the database
+// Then redirects user to the list of all URLs
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
 
-app.post('/urls/:id', (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
+// Updates a given shortURL with a new longURL provided by user
+// Then refreshes the page
+app.post('/urls/:shortURL', (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.newURL;
   res.redirect('back');
 });
 
+// Checks if a user corresponding to the provided email exists, then checks their password matches the provided password
+// If both match, logs the user in (sets a cookie with their user_id)
+// Otherwise sends back a status code of 403 and refreshes the page
 app.post('/login', (req, res) => {
   let user = getUserByEmail(users, req.body.email);
   if (user) {
@@ -104,11 +116,15 @@ app.post('/login', (req, res) => {
   res.redirect('back');
 });
 
+// Clears all active logins and redirects to the list of URLs
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
+// Checks if both required fields were inputted, and that the email isn't already in use
+// Then creates a new user with the provided details, and logs them in.
+// Otherwise returns a status of 400 and refreshes the page
 app.post('/register', (req, res) => {
   if (requiredFields(req) && !getUserByEmail(users, req.body.email)) {
     let newID = generateRandomString();
