@@ -52,6 +52,11 @@ app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>');
 });
 
+app.get('/register', (req, res) => {
+  const templateVars = {username: req.cookies['username'] ? req.cookes['username'] : undefined};
+  res.render('register', templateVars);
+});
+
 app.post('/urls', (req, res) => {
   let id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
