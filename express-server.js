@@ -17,8 +17,8 @@ app.set('view engine', 'ejs');
 
 // Mock Databases
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'e3434e'},
+  "9sm5xK": { longURL: "http://www.google.com", userID: 'e3434e'}
 };
 
 const users = {
@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 
 // Route for users utilizing the shortened url to link to the intended page
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -50,12 +50,20 @@ app.get('/urls', (req, res) => {
 // Serves a page to a user that allows them to create a new URL
 app.get('/urls/new', (req, res) => {
   const templateVars = {userInfo : users[req.cookies.user_id]};
-  res.render('urls_new', templateVars);
+  if (req.cookies.user_id) {
+    res.render('urls_new', templateVars);
+  } else {
+    res.render('login', templateVars)
+  }
 });
 
 // Displays information specific to the :shortURL provided, including ability to edit it
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = {userInfo: users[req.cookies.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = {
+    userInfo: users[req.cookies.user_id],
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL
+  };
   res.render('urls_show', templateVars);
 });
 
@@ -83,7 +91,10 @@ app.get('/login', (req, res) => {
 // Then redirects user to the informational page about their new URL
 app.post('/urls', (req, res) => {
   let id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  };
   res.redirect(`/urls/${id}`);
 });
 
@@ -97,7 +108,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // Updates a given shortURL with a new longURL provided by user
 // Then refreshes the page
 app.post('/urls/:shortURL', (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.newURL;
+  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
   res.redirect('back');
 });
 
@@ -110,6 +121,7 @@ app.post('/login', (req, res) => {
     if (req.body.password === user.password) {
       res.cookie('user_id', user.userRandomID);
       res.redirect('urls');
+      return;
     }
   }
   res.statusCode = 403;
