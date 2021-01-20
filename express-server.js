@@ -1,14 +1,15 @@
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
 // Helper functions
 const { generateRandomString } = require('./helpers');
 const { requiredFields } = require('./helpers');
-const { getUserByEmail } = require('./helpers')
+const { getUserByEmail } = require('./helpers');
+
 
 // Server Set Up
+const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 const PORT = 8080;
@@ -70,7 +71,7 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
   const templateVars = { userInfo : users[req.cookies.user_id]};
   res.render('login', templateVars);
-})
+});
 
 
 // POST requests
@@ -92,28 +93,35 @@ app.post('/urls/:id', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls')
-})
+  let user = getUserByEmail(users, req.body.email);
+  if (user) {
+    if (req.body.password === user.password) {
+      res.cookie('user_id', user.userRandomID);
+      res.redirect('urls');
+    }
+  }
+  res.statusCode = 403;
+  res.redirect('back');
+});
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
-})
+});
 
 app.post('/register', (req, res) => {
-  if(requiredFields(req) && !getUserByEmail(users, req.body.email)) {
+  if (requiredFields(req) && !getUserByEmail(users, req.body.email)) {
     let newID = generateRandomString();
     users[newID] = {
       userRandomID: newID,
       email: req.body.email,
       password: req.body.password
-    }
+    };
     res.cookie('user_id', newID);
-    res.redirect('/urls')
+    res.redirect('/urls');
   } else {
     res.statusCode = 400;
-    res.redirect('back')
+    res.redirect('back');
   }
 });
 
