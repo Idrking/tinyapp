@@ -38,7 +38,11 @@ const users = {
 // GET Requests
 
 app.get('/', (req, res) => {
-  res.send("Hello!");
+  if(req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login')
+  }
 });
 
 // Route for users utilizing the shortened url to link to the intended page
