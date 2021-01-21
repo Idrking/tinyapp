@@ -91,6 +91,9 @@ app.get('/urls.json', (req, res) => {
 // Serves a registration page to user
 app.get('/register', (req, res) => {
   const templateVars = { userInfo : users[req.session.user_id]};
+  if (templateVars.userInfo) {
+    return res.redirect('/urls');
+  }
   res.render('register', templateVars);
 });
 
