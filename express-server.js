@@ -77,6 +77,9 @@ app.get('/urls/:shortURL', (req, res) => {
     shortURL: req.params.shortURL,
     urlInfo: urlDatabase[req.params.shortURL]
   };
+  if (!templateVars.urlInfo) {
+    return res.status(404).render('404')
+  }
   res.render('urls_show', templateVars);
 });
 
