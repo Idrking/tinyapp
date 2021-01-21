@@ -4,7 +4,7 @@
   "description": "URL shortener student project for Lighthouse Labs",
   "main": "express-server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "./node_modules/mocha/bin/mocha",
     "start": "./node_modules/.bin/nodemon -L express-server.js"
   },
   "repository": {
@@ -33,6 +33,8 @@
     "express": "^4.17.1"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
     "nodemon": "^2.0.7"
   }
 }
