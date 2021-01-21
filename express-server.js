@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 
 // Helper functions
@@ -14,7 +14,10 @@ const { checkOwner } = require('./helpers.js');
 // Server Set Up
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['1553tiny43', '5252app23']
+}));
 const PORT = 8080;
 app.set('view engine', 'ejs');
 
@@ -46,17 +49,17 @@ app.get('/u/:shortURL', (req, res) => {
 
 // Route to display list of all currently active shortened URLs
 app.get('/urls', (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const urlsToShow = urlsForUser(urlDatabase, user);
-  const templateVars = {userInfo : users[req.cookies.user_id], urls: urlsToShow};
+  const templateVars = {userInfo : users[req.session.user_id], urls: urlsToShow};
   res.render('urls_index', templateVars);
 });
 
 // Serves a page to a user that allows them to create a new URL if the user is logged in.
 // Otherwise redirects them to the login page
 app.get('/urls/new', (req, res) => {
-  const templateVars = {userInfo : users[req.cookies.user_id]};
-  if (req.cookies.user_id) {
+  const templateVars = {userInfo : users[req.session.user_id]};
+  if (req.session.user_id) {
     res.render('urls_new', templateVars);
   } else {
     res.render('login', templateVars);
@@ -66,7 +69,7 @@ app.get('/urls/new', (req, res) => {
 // Displays information specific to the :shortURL provided, including ability to edit it
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
-    userInfo: users[req.cookies.user_id],
+    userInfo: users[req.session.user_id],
     shortURL: req.params.shortURL,
     urlInfo: urlDatabase[req.params.shortURL]
   };
@@ -80,13 +83,13 @@ app.get('/urls.json', (req, res) => {
 
 // Serves a registration page to user
 app.get('/register', (req, res) => {
-  const templateVars = { userInfo : users[req.cookies.user_id]};
+  const templateVars = { userInfo : users[req.session.user_id]};
   res.render('register', templateVars);
 });
 
 // Serves the login page to a user
 app.get('/login', (req, res) => {
-  const templateVars = { userInfo : users[req.cookies.user_id]};
+  const templateVars = { userInfo : users[req.session.user_id]};
   res.render('login', templateVars);
 });
 
@@ -97,11 +100,11 @@ app.get('/login', (req, res) => {
 // Then redirects user to the informational page about their new URL
 app.post('/urls', (req, res) => {
   // only logged in users should be able to create URLs
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     let id = generateRandomString();
     urlDatabase[id] = {
       longURL: req.body.longURL,
-      userID: req.cookies.user_id
+      userID: req.session.user_id
     };
     res.redirect(`/urls/${id}`);
   }
@@ -134,7 +137,7 @@ app.post('/login', (req, res) => {
     bcrypt.compare(req.body.password, user.password)
       .then((result) => {
         if (result) {
-          res.cookie('user_id', user.userRandomID);
+          req.session.user_id = user.userRandomID;
           return res.redirect('urls');
         }
         res.status(403).send('Username or Password incorrect');
@@ -151,7 +154,7 @@ app.post('/login', (req, res) => {
 
 // Clears all active logins and redirects to the list of URLs
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -168,7 +171,7 @@ app.post('/register', (req, res) => {
           email: req.body.email,
           password: hash
         };
-        res.cookie('user_id', newID);
+        req.session.user_id = newID;
         res.redirect('/urls');
       });
   } else {

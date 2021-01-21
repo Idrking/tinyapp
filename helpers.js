@@ -35,7 +35,7 @@ const urlsForUser = (urls, id) => {
 };
 
 const checkOwner = (parameter, req, urls) => {
-  const userID = req.cookies.user_id;
+  const userID = req.session.user_id;
   const urlOwner = urls[parameter].userID;
   if (userID === urlOwner) {
     return true;
