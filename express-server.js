@@ -113,8 +113,9 @@ app.post('/urls', (req, res) => {
       longURL: req.body.longURL,
       userID: req.session.user_id
     };
-    res.redirect(`/urls/${id}`);
+    return res.redirect(`/urls/${id}`);
   }
+  res.status(400).send('You must be logged in to create a URL')
 });
 
 // Removes a given :shortURL from the database after checking to make sure the current user is the one who created the shortened URL
@@ -122,8 +123,9 @@ app.post('/urls', (req, res) => {
 app.post('/urls/:shortURL/delete', (req, res) => {
   if (checkOwner(req.params.shortURL, req, urlDatabase)) {
     delete urlDatabase[req.params.shortURL];
+    return res.redirect('/urls');
   }
-  res.redirect('/urls');
+  res.status('400').send('You must own a URL to delete it');
 });
 
 // Updates a given shortURL with a new longURL provided by logged in user
@@ -131,8 +133,9 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   if (checkOwner(req.params.shortURL, req, urlDatabase)) {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+    return res.redirect('/urls');
   }
-  res.redirect('back');
+  res.status('400').send('You must be the creator of a URL to edit it');
 });
 
 // Checks if a user corresponding to the provided email exists, then checks their password matches the provided password
