@@ -7,6 +7,7 @@ const { generateRandomString } = require('./helpers');
 const { requiredFields } = require('./helpers');
 const { getUserByEmail } = require('./helpers');
 const { urlsForUser } = require('./helpers');
+const { checkOwner } = require('./helpers.js');
 
 
 // Server Set Up
@@ -50,13 +51,14 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// Serves a page to a user that allows them to create a new URL
+// Serves a page to a user that allows them to create a new URL if the user is logged in.
+// Otherwise redirects them to the login page
 app.get('/urls/new', (req, res) => {
   const templateVars = {userInfo : users[req.cookies.user_id]};
   if (req.cookies.user_id) {
     res.render('urls_new', templateVars);
   } else {
-    res.render('login', templateVars)
+    res.render('login', templateVars);
   }
 });
 
@@ -93,25 +95,32 @@ app.get('/login', (req, res) => {
 // Generates a new shortened URL for a given longURL, assigns it an ID and saves it in the mock database object
 // Then redirects user to the informational page about their new URL
 app.post('/urls', (req, res) => {
-  let id = generateRandomString();
-  urlDatabase[id] = {
-    longURL: req.body.longURL,
-    userID: req.cookies.user_id
-  };
-  res.redirect(`/urls/${id}`);
+  // only logged in users should be able to create URLs
+  if (req.cookies.user_id) {
+    let id = generateRandomString();
+    urlDatabase[id] = {
+      longURL: req.body.longURL,
+      userID: req.cookies.user_id
+    };
+    res.redirect(`/urls/${id}`);
+  }
 });
 
-// Removes a given :shortURL from the database
+// Removes a given :shortURL from the database after checking to make sure the current user is the one who created the shortened URL
 // Then redirects user to the list of all URLs
 app.post('/urls/:shortURL/delete', (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  if (checkOwner(req.params.shortURL, req, urlDatabase)) {
+    delete urlDatabase[req.params.shortURL];
+  }
   res.redirect('/urls');
 });
 
-// Updates a given shortURL with a new longURL provided by user
+// Updates a given shortURL with a new longURL provided by logged in user
 // Then refreshes the page
 app.post('/urls/:shortURL', (req, res) => {
-  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+  if (checkOwner(req.params.shortURL, req, urlDatabase)) {
+    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+  }
   res.redirect('back');
 });
 

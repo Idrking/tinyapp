@@ -3,7 +3,7 @@ const generateRandomString = () => {
 };
 
 const requiredFields = req => {
-  return req.body.email && req.body.password
+  return req.body.email && req.body.password;
 };
 
 const getUserByEmail = (users, email) => {
@@ -18,7 +18,7 @@ const getUserByEmail = (users, email) => {
 const urlsForUser = (urls, id) => {
   if (id === undefined) {
     return undefined;
-  };
+  }
 
   const matchingURLS = [];
   for (const shortURL in urls) {
@@ -27,11 +27,20 @@ const urlsForUser = (urls, id) => {
         shortURL,
         longURL: urls[shortURL].longURL,
         userID: urls[shortURL].usedID
-      }; 
+      };
       matchingURLS.push(urlInfo);
     }
   }
   return matchingURLS;
-}
+};
 
-module.exports = { generateRandomString, requiredFields, getUserByEmail, urlsForUser };
+const checkOwner = (parameter, req, urls) => {
+  const userID = req.cookies.user_id;
+  const urlOwner = urls[parameter].userID;
+  if (userID === urlOwner) {
+    return true;
+  }
+  return false;
+};
+
+module.exports = { generateRandomString, requiredFields, getUserByEmail, urlsForUser, checkOwner };
