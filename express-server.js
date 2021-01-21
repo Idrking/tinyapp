@@ -131,14 +131,22 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/login', (req, res) => {
   let user = getUserByEmail(users, req.body.email);
   if (user) {
-    if (req.body.password === user.password) {
-      res.cookie('user_id', user.userRandomID);
-      res.redirect('urls');
-      return;
-    }
+    bcrypt.compare(req.body.password, user.password)
+      .then((result) => {
+        if (result) {
+          res.cookie('user_id', user.userRandomID);
+          return res.redirect('urls');
+        }
+        res.status(403).send('Username or Password incorrect');
+      })
+      .catch(err => {
+        if (err) {
+          throw err;
+        }
+      });
+  } else {
+    res.status(403).send('Username or Password incorrect');
   }
-  res.statusCode = 403;
-  res.redirect('back');
 });
 
 // Clears all active logins and redirects to the list of URLs
@@ -152,21 +160,19 @@ app.post('/logout', (req, res) => {
 // Otherwise returns a status of 400 and refreshes the page
 app.post('/register', (req, res) => {
   if (requiredFields(req) && !getUserByEmail(users, req.body.email)) {
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(req.body.password, salt, (err, hash) => {
+    bcrypt.hash(req.body.password, 10)
+      .then((hash) => {
         let newID = generateRandomString();
         users[newID] = {
           userRandomID: newID,
           email: req.body.email,
           password: hash
         };
-        console.log(users);
         res.cookie('user_id', newID);
         res.redirect('/urls');
-      })
-    });   
+      });
   } else {
-    res.status(400).send('Username or Password provided is incorrect')
+    res.status(400).send('That email is unavailable');
   }
 });
 
