@@ -97,6 +97,9 @@ app.get('/register', (req, res) => {
 // Serves the login page to a user
 app.get('/login', (req, res) => {
   const templateVars = { userInfo : users[req.session.user_id]};
+  if (templateVars.userInfo) {
+    return res.redirect('/urls');
+  }
   res.render('login', templateVars);
 });
 
