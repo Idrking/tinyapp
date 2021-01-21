@@ -131,7 +131,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     delete urlDatabase[req.params.shortURL];
     return res.redirect('/urls');
   }
-  res.status('400').send('You must own a URL to delete it');
+  res.status(400).send('You must own a URL to delete it');
 });
 
 // Updates a given shortURL with a new longURL provided by logged in user
@@ -141,7 +141,7 @@ app.post('/urls/:shortURL', (req, res) => {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
     return res.redirect('/urls');
   }
-  res.status('400').send('You must be the creator of a URL to edit it');
+  res.status(400).send('You must be the creator of a URL to edit it');
 });
 
 // Checks if a user corresponding to the provided email exists, then checks their password matches the provided password
