@@ -38,10 +38,10 @@ const users = {
 // GET Requests
 
 app.get('/', (req, res) => {
-  if(req.session.user_id) {
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-    res.redirect('/login')
+    res.redirect('/login');
   }
 });
 
@@ -78,7 +78,7 @@ app.get('/urls/:shortURL', (req, res) => {
     urlInfo: urlDatabase[req.params.shortURL]
   };
   if (!templateVars.urlInfo) {
-    return res.status(404).render('404')
+    return res.status(404).render('404');
   }
   res.render('urls_show', templateVars);
 });
@@ -121,7 +121,7 @@ app.post('/urls', (req, res) => {
     };
     return res.redirect(`/urls/${id}`);
   }
-  res.status(400).send('You must be logged in to create a URL')
+  res.status(400).send('You must be logged in to create a URL');
 });
 
 // Removes a given :shortURL from the database after checking to make sure the current user is the one who created the shortened URL
