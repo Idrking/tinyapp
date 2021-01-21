@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const { generateRandomString } = require('./helpers');
 const { requiredFields } = require('./helpers');
 const { getUserByEmail } = require('./helpers');
+const { urlsForUser } = require('./helpers');
 
 
 // Server Set Up
@@ -43,7 +44,9 @@ app.get('/u/:shortURL', (req, res) => {
 
 // Route to display list of all currently active shortened URLs
 app.get('/urls', (req, res) => {
-  const templateVars = {userInfo : users[req.cookies.user_id], urls: urlDatabase};
+  const user = req.cookies.user_id;
+  const urlsToShow = urlsForUser(urlDatabase, user);
+  const templateVars = {userInfo : users[req.cookies.user_id], urls: urlsToShow};
   res.render('urls_index', templateVars);
 });
 
@@ -62,7 +65,7 @@ app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
     userInfo: users[req.cookies.user_id],
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL
+    urlInfo: urlDatabase[req.params.shortURL]
   };
   res.render('urls_show', templateVars);
 });

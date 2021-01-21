@@ -15,5 +15,23 @@ const getUserByEmail = (users, email) => {
   return undefined;
 };
 
+const urlsForUser = (urls, id) => {
+  if (id === undefined) {
+    return undefined;
+  };
 
-module.exports = { generateRandomString, requiredFields, getUserByEmail };
+  const matchingURLS = [];
+  for (const shortURL in urls) {
+    if (urls[shortURL].userID === id) {
+      let urlInfo = {
+        shortURL,
+        longURL: urls[shortURL].longURL,
+        userID: urls[shortURL].usedID
+      }; 
+      matchingURLS.push(urlInfo);
+    }
+  }
+  return matchingURLS;
+}
+
+module.exports = { generateRandomString, requiredFields, getUserByEmail, urlsForUser };
