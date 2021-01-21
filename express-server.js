@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 // Helper functions
 const { generateRandomString } = require('./helpers');
@@ -151,17 +152,21 @@ app.post('/logout', (req, res) => {
 // Otherwise returns a status of 400 and refreshes the page
 app.post('/register', (req, res) => {
   if (requiredFields(req) && !getUserByEmail(users, req.body.email)) {
-    let newID = generateRandomString();
-    users[newID] = {
-      userRandomID: newID,
-      email: req.body.email,
-      password: req.body.password
-    };
-    res.cookie('user_id', newID);
-    res.redirect('/urls');
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(req.body.password, salt, (err, hash) => {
+        let newID = generateRandomString();
+        users[newID] = {
+          userRandomID: newID,
+          email: req.body.email,
+          password: hash
+        };
+        console.log(users);
+        res.cookie('user_id', newID);
+        res.redirect('/urls');
+      })
+    });   
   } else {
-    res.statusCode = 400;
-    res.redirect('back');
+    res.status(400).send('Username or Password provided is incorrect')
   }
 });
 
