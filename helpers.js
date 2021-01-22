@@ -1,3 +1,5 @@
+const e = require("express");
+
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 100000000).toString(32);
 };
@@ -43,17 +45,47 @@ const checkOwner = (parameter, req, urls) => {
   return false;
 };
 
-// Updates the total visit tracker, and unique visit tracker on the given urls[id] object.
-// If the user has visited the link before, updates total visit tracker
-// Otherwise sets a cookie named after the longURL, with a value of true to indicate they've visited that site via this link, and updates the total and unique tracker
+// First checks if a tracking cookie has been created for this user.
+// If it has, parses that tracking cookie into an object, and then checks if it has visited this specific link before
+// It it has, returns true, otherwise it pushs the shortURL of this link to the visits log, and then returns false (indicating they haven't been to this link before)
+// Otherwise creates a new tracking cookie, and assigns the visitor a unique ID.
+const updateTrackingCookie = (req, id) => {
+  if(req.session.visits) {
+    const visits = JSON.parse(req.session.visits);
+    if (visits.sitesVisited.includes(id)) {
+      return true;
+    }
+    visits.sitesVisited.push(id)
+    req.session.visits = JSON.stringify(visits);
+    return false;
+  }
+  req.session.visits = JSON.stringify({visID: generateRandomString(), sitesVisited: [id]});
+  return false;
+};
+
+// Parses the visits cookie, and creates a new visitor log entry for the given url[id]
+// as an object with a visitor ID and the current timestamp
+const updateVisitLog = (id, urls, req) => {
+  const visits = JSON.parse(req.session.visits);
+  const newLogEntry = {
+    visID: visits.visID,
+    date: Date.now().toLocaleString('en-us', {timeZone: 'America/Vancouver'})
+  };
+  urls[id].visits.log.push(newLogEntry);
+}
+
+// if updateTrackingCookie returns true (indicating the user has visited this page before)
+// increments the total visit counter for that URL
+// Otherwise increments both the unique and total counters
+// Then updates the log of visits to display on the URL page
 const updateVisits = (id, urls, req) => {
-  if(req.session[urls[id].longURL]) {
+  if(updateTrackingCookie(req, id)) {
     urls[id].visits.total += 1;
   } else {
-    req.session[urls[id].longURL] = true;
     urls[id].visits.total += 1;
     urls[id].visits.unique += 1;
   }
+  updateVisitLog(id, urls, req);
 };
 
 module.exports = { generateRandomString, requiredFields, getUserByEmail, urlsForUser, checkOwner, updateVisits };

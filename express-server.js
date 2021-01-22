@@ -46,6 +46,7 @@ app.get('/', (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   updateVisits(req.params.shortURL, urlDatabase, req);
+  console.log(JSON.stringify(urlDatabase));
   res.redirect(longURL);
 });
 
