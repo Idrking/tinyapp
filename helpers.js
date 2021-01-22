@@ -43,4 +43,17 @@ const checkOwner = (parameter, req, urls) => {
   return false;
 };
 
-module.exports = { generateRandomString, requiredFields, getUserByEmail, urlsForUser, checkOwner };
+// Updates the total visit tracker, and unique visit tracker on the given urls[id] object.
+// If the user has visited the link before, updates total visit tracker
+// Otherwise sets a cookie named after the longURL, with a value of true to indicate they've visited that site via this link, and updates the total and unique tracker
+const updateVisits = (id, urls, req) => {
+  if(req.session[urls[id].longURL]) {
+    urls[id].visits.total += 1;
+  } else {
+    req.session[urls[id].longURL] = true;
+    urls[id].visits.total += 1;
+    urls[id].visits.unique += 1;
+  }
+};
+
+module.exports = { generateRandomString, requiredFields, getUserByEmail, urlsForUser, checkOwner, updateVisits };

@@ -9,7 +9,8 @@ const { generateRandomString } = require('./helpers');
 const { requiredFields } = require('./helpers');
 const { getUserByEmail } = require('./helpers');
 const { urlsForUser } = require('./helpers');
-const { checkOwner } = require('./helpers.js');
+const { checkOwner } = require('./helpers');
+const { updateVisits } = require('./helpers');
 
 
 // Server Set Up
@@ -25,17 +26,11 @@ const PORT = 8080;
 
 // Mock Databases
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'e3434e'},
-  "9sm5xK": { longURL: "http://www.google.com", userID: 'e3434e'}
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'e3434e', visits: {total: 0, unique: 0, log: []}},
+  "9sm5xK": { longURL: "http://www.google.com", userID: 'e3434e', visits: {total: 0, unique: 0, log: []}}
 };
 
-const users = {
-  e3434e: {
-    userRandomID: 'e3434e',
-    email: 'testemail@yahoo.gov',
-    password: 'arealpassword'
-  }
-};
+const users = {};
 
 // GET Requests
 
@@ -50,6 +45,7 @@ app.get('/', (req, res) => {
 // Route for users utilizing the shortened url to link to the intended page
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
+  updateVisits(req.params.shortURL, urlDatabase, req);
   res.redirect(longURL);
 });
 
@@ -119,7 +115,12 @@ app.post('/urls', (req, res) => {
     let id = generateRandomString();
     urlDatabase[id] = {
       longURL: req.body.longURL,
-      userID: req.session.user_id
+      userID: req.session.user_id,
+      visits: {
+        total: 0,
+        unique: 0,
+        log: []
+      }
     };
     return res.redirect(`/urls/${id}`);
   }

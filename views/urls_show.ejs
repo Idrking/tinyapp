@@ -10,7 +10,6 @@
   <%- include('partials/_header') %>
   <% if (userInfo && userInfo.userRandomID === urlInfo.userID) { %>
     <div class='card text-center'>
-        <div class='card-header'></div>
         <div class='card-body'>
           <h5 class='card-title'>TinyURL for: <%= urlInfo.longURL %></h5>
           <p class='card-text'>Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
@@ -24,10 +23,14 @@
           </form>
         </div>
     </div>
-    <div class='card text-center'>
-      <div class='card-header'></div>
+    <div class="card text-center">
+      <div class='card-header'>Analytics</div>
       <div class='card-body'>
-    </div>
+        <h5 class='card-title'>Total Visits</h5>
+        <p class='card-text'><%= urlInfo.visits.total %></p>
+        <h5 class='card-titel'>Unique Visits</h5>
+        <p class='card-text'><%= urlInfo.visits.unique %></p>
+      </div>
   </div>
   <% } else { %>
     <div class='card text-center'>
