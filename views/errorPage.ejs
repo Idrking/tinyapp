@@ -11,9 +11,10 @@
 </head>
 
 <body>
+  <%- include ('partials/_header') %>
   <div class='card text-center'>
-    <h1 class='card-header'>404: PAGE NOT FOUND</h1>
-    <p class='card-text'> The page or resource you requested could not be found</p>
+    <h1 class='card-header'>Error <%= status %></h1>
+    <p class='card-text'> <%= errorMessage %></p>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

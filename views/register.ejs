@@ -13,6 +13,11 @@
 <body>
 <%- include ('partials/_header') %>
 <main style='margin:1em'>
+  <% if (emailTaken) { %>
+    <div class='bg-warning text-white col-6' style='padding:0.5em'>
+      <h4>Email already in use</h4>
+    </div>
+  <% } %>
   <h3>Register</h3>
   <form method="POST" action="/register" class="form-group">
     <label for='email'>Email:</label>

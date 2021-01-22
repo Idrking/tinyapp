@@ -3,7 +3,7 @@
 <head>
   <!--Bootstrap CSS-->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <title>URL - TinyApp Example</title>
+  <title>URL - TinyApp</title>
 </head>
 
 <body>
@@ -30,6 +30,28 @@
         <p class='card-text'><%= urlInfo.visits.total %></p>
         <h5 class='card-titel'>Unique Visits</h5>
         <p class='card-text'><%= urlInfo.visits.unique %></p>
+      </div>
+      <div class='card-footer text-muted'>
+        <h5>All Visits</h5>
+        <table class = 'table'>
+          <thead>
+            <tr>
+              <th scope='col'>Visitor ID</th>
+              <th scope='col'>Time Visited</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const logs of urlInfo.visits.log) { %>
+            <tr>
+              <td><%= logs.visID %></td>
+              <td><%= logs.date %></td>
+            </tr>
+            <% } %>
+          </tbody>
+
+        </table>
+
+
       </div>
   </div>
   <% } else { %>

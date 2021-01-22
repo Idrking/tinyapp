@@ -1,13 +1,15 @@
-const e = require("express");
-
+// Generates a random string to use as visitor, url or account IDs
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 100000000).toString(32);
 };
 
+// checks to confirm all the required fields in a form have been filled in
 const requiredFields = req => {
   return req.body.email && req.body.password;
 };
 
+// Given an object of users, and an email, returns the user object whose email matches the provided one
+// If no user exists with that email, returns undefined
 const getUserByEmail = (users, email) => {
   for (let userID in users) {
     if (users[userID].email === email) {
@@ -17,6 +19,8 @@ const getUserByEmail = (users, email) => {
   return undefined;
 };
 
+// Given a object containing URL information, returns an array of shortURLs that belong to the user[id]
+// If an id isn't provided, returns undefined, otherwise returns an empty array if the user hasn't created any urls
 const urlsForUser = (urls, id) => {
   if (id === undefined) {
     return undefined;
@@ -36,6 +40,8 @@ const urlsForUser = (urls, id) => {
   return matchingURLS;
 };
 
+// Confirms that the currently logged in user and the user who own a particular URL are the same person
+// returns true if they match, false otherwise
 const checkOwner = (parameter, req, urls) => {
   const userID = req.session.user_id;
   const urlOwner = urls[parameter].userID;
@@ -69,7 +75,7 @@ const updateVisitLog = (id, urls, req) => {
   const visits = JSON.parse(req.session.visits);
   const newLogEntry = {
     visID: visits.visID,
-    date: Date.now().toLocaleString('en-us', {timeZone: 'America/Vancouver'})
+    date: new Date(Date.now()).toLocaleString('en-us', {timeZone: 'America/Vancouver'})
   };
   urls[id].visits.log.push(newLogEntry);
 }

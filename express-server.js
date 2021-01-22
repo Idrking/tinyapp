@@ -5,35 +5,28 @@ const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
 
 // Helper functions
-const { generateRandomString } = require('./helpers');
-const { requiredFields } = require('./helpers');
-const { getUserByEmail } = require('./helpers');
-const { urlsForUser } = require('./helpers');
-const { checkOwner } = require('./helpers');
-const { updateVisits } = require('./helpers');
-
+const { generateRandomString, requiredFields, getUserByEmail, urlsForUser, checkOwner, updateVisits } = require('./helpers');
 
 // Server Set Up
 const app = express();
+const PORT = 8080;
+app.set('view engine', 'ejs');
+
+// Middleware Set Up
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ['1553tiny43', '5252app23']
 }));
 app.use(methodOverride('_method'));
-app.set('view engine', 'ejs');
-const PORT = 8080;
 
 // Mock Databases
-const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'e3434e', visits: {total: 0, unique: 0, log: []}},
-  "9sm5xK": { longURL: "http://www.google.com", userID: 'e3434e', visits: {total: 0, unique: 0, log: []}}
-};
-
+const urlDatabase = {};
 const users = {};
 
 // GET Requests
 
+// Index route: If a user is logged in from a previous visit, directs them to /urls, otherwise sends them to the login page
 app.get('/', (req, res) => {
   if (req.session.user_id) {
     res.redirect('/urls');
@@ -43,14 +36,15 @@ app.get('/', (req, res) => {
 });
 
 // Route for users utilizing the shortened url to link to the intended page
+// calls updateVisits to update and/or set the tracking cookie and update the analytics
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   updateVisits(req.params.shortURL, urlDatabase, req);
-  console.log(JSON.stringify(urlDatabase));
   res.redirect(longURL);
 });
 
 // Route to display list of all currently active shortened URLs
+// If the user is not logged in, shows them a prompt to log in/register instead
 app.get('/urls', (req, res) => {
   const user = req.session.user_id;
   const urlsToShow = urlsForUser(urlDatabase, user);
@@ -70,6 +64,7 @@ app.get('/urls/new', (req, res) => {
 });
 
 // Displays information specific to the :shortURL provided, including ability to edit it
+// If their isn't any url that matches shortURL, displays a 404 error page
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
     userInfo: users[req.session.user_id],
@@ -77,19 +72,17 @@ app.get('/urls/:shortURL', (req, res) => {
     urlInfo: urlDatabase[req.params.shortURL]
   };
   if (!templateVars.urlInfo) {
-    return res.status(404).render('404');
+    templateVars.status = 404;
+    templateVars.errorMessage = "The page or content you're looking for cannot be found"
+    return res.status(404).render('errorPage', templateVars);
   }
+  console.log(templateVars.urlInfo);
   res.render('urls_show', templateVars);
-});
-
-// returns the active shortened URLs as a JSON object
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
 });
 
 // Serves a registration page to user
 app.get('/register', (req, res) => {
-  const templateVars = { userInfo : users[req.session.user_id]};
+  const templateVars = { userInfo : users[req.session.user_id], emailTaken: false};
   if (templateVars.userInfo) {
     return res.redirect('/urls');
   }
@@ -97,8 +90,9 @@ app.get('/register', (req, res) => {
 });
 
 // Serves the login page to a user
+// If a user is already logged in, redirects them to /urls
 app.get('/login', (req, res) => {
-  const templateVars = { userInfo : users[req.session.user_id]};
+  const templateVars = { userInfo : users[req.session.user_id], wrongInfo: false};
   if (templateVars.userInfo) {
     return res.redirect('/urls');
   }
@@ -125,14 +119,17 @@ app.post('/urls', (req, res) => {
     };
     return res.redirect(`/urls/${id}`);
   }
-  res.status(400).send('You must be logged in to create a URL');
+  // If a user is not logged in and tries to create a url, sends them to an error page
+  const templateVars = { userInfo : users[req.session.user_id], status: 400, errorMessage: 'You must be logged in to create a URL'};
+  res.status(400).render('errorPage', templateVars);
 });
 
 // Checks if a user corresponding to the provided email exists, then checks their password matches the provided password
 // If both match, logs the user in (sets a cookie with their user_id)
-// Otherwise sends back a status code of 403 and refreshes the page
+// Otherwise sends back a status code of 403 and refreshes the page with an incorrect username/password prompt
 app.post('/login', (req, res) => {
   let user = getUserByEmail(users, req.body.email);
+  const templateVars = { userInfo : users[req.session.user_id], wrongInfo: false};
   if (user) {
     bcrypt.compare(req.body.password, user.password)
       .then((result) => {
@@ -140,7 +137,8 @@ app.post('/login', (req, res) => {
           req.session.user_id = user.userRandomID;
           return res.redirect('urls');
         }
-        res.status(403).send('Username or Password incorrect');
+        templateVars.wrongInfo = true;
+        res.status(403).render('login', templateVars);
       })
       .catch(err => {
         if (err) {
@@ -148,7 +146,8 @@ app.post('/login', (req, res) => {
         }
       });
   } else {
-    res.status(403).send('Username or Password incorrect');
+    templateVars.wrongInfo = true;
+    res.status(403).render('login', templateVars);
   }
 });
 
@@ -160,7 +159,7 @@ app.post('/logout', (req, res) => {
 
 // Checks if both required fields were inputted, and that the email isn't already in use
 // Then creates a new user with the provided details, and logs them in.
-// Otherwise returns a status of 400 and refreshes the page
+// Otherwise returns a status of 403 and displays an email already taken prompt
 app.post('/register', (req, res) => {
   if (requiredFields(req) && !getUserByEmail(users, req.body.email)) {
     bcrypt.hash(req.body.password, 10)
@@ -175,20 +174,24 @@ app.post('/register', (req, res) => {
         res.redirect('/urls');
       });
   } else {
-    res.status(400).send('That email is unavailable');
+    const templateVars = { userInfo : users[req.session.user_id], emailTaken: true};
+    res.status(403).render('register', templateVars);
   }
 });
 
 // PUT Requests
 
 // Updates a given shortURL with a new longURL provided by logged in user
-// Then refreshes the page
+// Then sends them back to the master list of urls
 app.put('/urls/:shortURL', (req, res) => {
   if (checkOwner(req.params.shortURL, req, urlDatabase)) {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
     return res.redirect('/urls');
   }
-  res.status(400).send('You must be the creator of a URL to edit it');
+  
+  // If a user other than the creator attempts to edit the URL, sends them to an error page
+  const templateVars = { userInfo: users[req.session.user_id], status: 401, errorMessage: 'You must be the creator of a URL to edit it.' };
+  res.status(401).render('errorPage', templateVars);
 });
 
 // DELETE Requests
@@ -200,18 +203,23 @@ app.delete('/urls/:shortURL', (req, res) => {
     delete urlDatabase[req.params.shortURL];
     return res.redirect('/urls');
   }
-  res.status(400).send('You must own a URL to delete it');
+
+  // If a user other than the one who created it tries to delete it, sends them to an error page
+  const templateVars = { userInfo: users[req.session.user_id], status: 401, errorMessage: 'You must be the creator of a URL to delete it.' };
+  res.status(401).render('errorPage', templateVars);
 });
 
 //404 page - this needs to remain at the bottom
 app.get('*', (req, res) => {
   res.statusCode = 404;
-  res.render('404');
+  const templateVars = { userInfo: users[req.session.user_id], status: 404, errorMessage: `The page or content you're looking for cannot be found` };
+  res.render('errorPage', templateVars);
 });
 
 app.post('*', (req, res) => {
   res.statusCode = 404;
-  res.render('404');
+  const templateVars = { userInfo: users[req.session.user_id], status: 404, errorMessage: `The page or content you're looking for cannot be found` };
+  res.render('errorPage', templateVars);
 });
 
 // Function to start the server

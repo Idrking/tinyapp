@@ -13,6 +13,11 @@
 <body>
 <%- include ('partials/_header') %>
 <main style='margin:1em'>
+  <% if (wrongInfo) { %>
+    <div class='bg-danger text-white col-6' style='padding:0.5em'>
+      <h4>Incorrect Username or Password</h4>
+    </div>
+  <% } %>
   <h3>Log In</h3>
   <form method="POST" action="/login" class="form-group">
     <label for='email'>Email:</label>
