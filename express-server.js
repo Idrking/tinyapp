@@ -73,7 +73,7 @@ app.get('/urls/:shortURL', (req, res) => {
   };
   if (!templateVars.urlInfo) {
     templateVars.status = 404;
-    templateVars.errorMessage = "The page or content you're looking for cannot be found"
+    templateVars.errorMessage = "The page or content you're looking for cannot be found";
     return res.status(404).render('errorPage', templateVars);
   }
   console.log(templateVars.urlInfo);

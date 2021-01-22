@@ -56,12 +56,12 @@ const checkOwner = (parameter, req, urls) => {
 // It it has, returns true, otherwise it pushs the shortURL of this link to the visits log, and then returns false (indicating they haven't been to this link before)
 // Otherwise creates a new tracking cookie, and assigns the visitor a unique ID.
 const updateTrackingCookie = (req, id) => {
-  if(req.session.visits) {
+  if (req.session.visits) {
     const visits = JSON.parse(req.session.visits);
     if (visits.sitesVisited.includes(id)) {
       return true;
     }
-    visits.sitesVisited.push(id)
+    visits.sitesVisited.push(id);
     req.session.visits = JSON.stringify(visits);
     return false;
   }
@@ -78,14 +78,14 @@ const updateVisitLog = (id, urls, req) => {
     date: new Date(Date.now()).toLocaleString('en-us', {timeZone: 'America/Vancouver'})
   };
   urls[id].visits.log.push(newLogEntry);
-}
+};
 
 // if updateTrackingCookie returns true (indicating the user has visited this page before)
 // increments the total visit counter for that URL
 // Otherwise increments both the unique and total counters
 // Then updates the log of visits to display on the URL page
 const updateVisits = (id, urls, req) => {
-  if(updateTrackingCookie(req, id)) {
+  if (updateTrackingCookie(req, id)) {
     urls[id].visits.total += 1;
   } else {
     urls[id].visits.total += 1;
