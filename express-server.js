@@ -37,10 +37,16 @@ app.get('/', (req, res) => {
 
 // Route for users utilizing the shortened url to link to the intended page
 // calls updateVisits to update and/or set the tracking cookie and update the analytics
+// If the given URL doesn't exist, returns a 404
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  updateVisits(req.params.shortURL, urlDatabase, req);
-  res.redirect(longURL);
+  if (urlDatabase[req.params.shortURL]) {
+    const longURL = urlDatabase[req.params.shortURL].longURL;
+    updateVisits(req.params.shortURL, urlDatabase, req);
+    res.redirect(longURL);
+  } else {
+    const templateVars = { userInfo: users[req.session.user_id], status: 404, errorMessage: `The page or content you're looking for cannot be found` };
+    res.status(404).render('errorPage', templateVars);
+  }
 });
 
 // Route to display list of all currently active shortened URLs
@@ -76,7 +82,6 @@ app.get('/urls/:shortURL', (req, res) => {
     templateVars.errorMessage = "The page or content you're looking for cannot be found";
     return res.status(404).render('errorPage', templateVars);
   }
-  console.log(templateVars.urlInfo);
   res.render('urls_show', templateVars);
 });
 
