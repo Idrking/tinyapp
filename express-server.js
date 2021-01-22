@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override');
 
 // Helper functions
 const { generateRandomString } = require('./helpers');
@@ -18,8 +19,9 @@ app.use(cookieSession({
   name: 'session',
   keys: ['1553tiny43', '5252app23']
 }));
-const PORT = 8080;
+app.use(methodOverride('_method'));
 app.set('view engine', 'ejs');
+const PORT = 8080;
 
 // Mock Databases
 const urlDatabase = {
@@ -124,26 +126,6 @@ app.post('/urls', (req, res) => {
   res.status(400).send('You must be logged in to create a URL');
 });
 
-// Removes a given :shortURL from the database after checking to make sure the current user is the one who created the shortened URL
-// Then redirects user to the list of all URLs
-app.post('/urls/:shortURL/delete', (req, res) => {
-  if (checkOwner(req.params.shortURL, req, urlDatabase)) {
-    delete urlDatabase[req.params.shortURL];
-    return res.redirect('/urls');
-  }
-  res.status(400).send('You must own a URL to delete it');
-});
-
-// Updates a given shortURL with a new longURL provided by logged in user
-// Then refreshes the page
-app.post('/urls/:shortURL', (req, res) => {
-  if (checkOwner(req.params.shortURL, req, urlDatabase)) {
-    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-    return res.redirect('/urls');
-  }
-  res.status(400).send('You must be the creator of a URL to edit it');
-});
-
 // Checks if a user corresponding to the provided email exists, then checks their password matches the provided password
 // If both match, logs the user in (sets a cookie with their user_id)
 // Otherwise sends back a status code of 403 and refreshes the page
@@ -193,6 +175,30 @@ app.post('/register', (req, res) => {
   } else {
     res.status(400).send('That email is unavailable');
   }
+});
+
+// PUT Requests
+
+// Updates a given shortURL with a new longURL provided by logged in user
+// Then refreshes the page
+app.put('/urls/:shortURL', (req, res) => {
+  if (checkOwner(req.params.shortURL, req, urlDatabase)) {
+    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+    return res.redirect('/urls');
+  }
+  res.status(400).send('You must be the creator of a URL to edit it');
+});
+
+// DELETE Requests
+
+// Removes a given :shortURL from the database after checking to make sure the current user is the one who created the shortened URL
+// Then redirects user to the list of all URLs
+app.delete('/urls/:shortURL', (req, res) => {
+  if (checkOwner(req.params.shortURL, req, urlDatabase)) {
+    delete urlDatabase[req.params.shortURL];
+    return res.redirect('/urls');
+  }
+  res.status(400).send('You must own a URL to delete it');
 });
 
 //404 page - this needs to remain at the bottom
